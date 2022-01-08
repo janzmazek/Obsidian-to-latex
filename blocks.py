@@ -59,13 +59,13 @@ class Block:
 
 
 class Section(Block):
-    section_levels = {1: 'chapter', 2: 'section', 3: 'subsection'}
+    section_levels = {1: 'section', 2: 'subsection', 3: 'subsubsection'}
 
-    def __init__(self, h_level, title, content):
+    def __init__(self, h_level, title, content, fig_path):
         super().__init__(content)
         self.h_level = h_level
         self.title = title
-        self.children = to_blocks(content, parent=self)
+        self.children = to_blocks(content, fig_path, parent=self)
         self.md_file_path = None
         self.tex_file_path = None
 
@@ -179,12 +179,13 @@ class Quote(Block):
 
 
 class Figure(Block):
-    def __init__(self, settings, label, caption):
+    def __init__(self, settings, label, caption, path):
         if isinstance(caption, str):
             caption = [caption]
         super().__init__(caption)
         self.settings = settings
         self.label = label
+        self.path = path
 
     @property
     def file_name(self):
@@ -201,7 +202,7 @@ class Figure(Block):
     def formatted_text(self):
         text_lines = ['\\begin{figure}[H]\n']
         text_lines += ['\t\\centering\n']
-        text_lines += [f'\t\\includegraphics[width={self.width}\linewidth]{{Graphics/{self.file_name}}}\n']
+        text_lines += [f'\t\\includegraphics[width={self.width}\linewidth]{{{os.path.join(self.path, self.file_name)}}}\n']
         text_lines += ['\t\\caption{'] + super(Figure, self).formatted_text() + ['}\n']
         text_lines += [f'\t\\label{{{self.label}}}\n']
         text_lines += ['\\end{figure}\n']
@@ -222,8 +223,8 @@ class Project:
         self.children.append(child)
         child.parent = self
 
-    def parse_md_file_contents(self, contents, md_file_path, tex_file_path):
-        for block in to_blocks(contents, parent=self):
+    def parse_md_file_contents(self, contents, md_file_path, tex_file_path, fig_path):
+        for block in to_blocks(contents, fig_path, parent=self):
             if isinstance(block, Section):
                 block.md_file_path = md_file_path
                 block.tex_file_path = tex_file_path

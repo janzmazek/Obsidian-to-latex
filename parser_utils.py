@@ -127,7 +127,7 @@ def find_next_index(lst, expr, start=0):
 """
 
 
-def to_blocks(text_lines, parent=None):
+def to_blocks(text_lines, fig_path, parent=None):
     from blocks import Section, Paragraph, Equation, List, Quote, Figure, Footnote
     if issubclass(str, type(text_lines)):
         text_lines = text_lines.splitlines()
@@ -137,7 +137,6 @@ def to_blocks(text_lines, parent=None):
     i = 0
     while i < len(text_lines):
         block = None
-        line = text_lines[i]
         # PROCESS IGNORE BLOCK COMMAND
         if is_command(text_lines[i], IGNORE_START_COMMAND):
             is_ignoring = True
@@ -155,7 +154,7 @@ def to_blocks(text_lines, parent=None):
             h_level = header['h_level']
             title = header['title']
             end_section_i = find_next_index(text_lines, lambda l: detect_header(l, h_level), i + 1)
-            block = Section(h_level=h_level, title=title, content=text_lines[i + 1: end_section_i])
+            block = Section(h_level=h_level, title=title, content=text_lines[i + 1: end_section_i], fig_path=fig_path)
             i = end_section_i
         # PROCESS EQUATION BLOCK (unlabeled)
         elif is_equation_dollars(text_lines[i]):
@@ -185,7 +184,7 @@ def to_blocks(text_lines, parent=None):
             assert alt_data, f'Caption of figure <{settings[0]}> badly formed'
             label = alt_data.group(1).strip()
             caption = alt_data.group(2).strip()
-            block = Figure(settings=settings, label=label, caption=caption)
+            block = Figure(settings=settings, label=label, caption=caption, path=fig_path)
             i = i + 2  # figures are just one line for the command and another for the label and caption
         # PROCESS FOOTNOTE BLOCK
         elif footnote_match := detect_footnote(text_lines[i]):

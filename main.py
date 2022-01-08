@@ -29,10 +29,9 @@ from blocks import Project, Section
 
 
 if len(sys.argv) == 1:
-    print('NO CONFIG FILE PROVIDED')
-    exit()
-
-config_file = sys.argv[1]
+    config_file = "parser_config.json"
+else:
+    config_file = sys.argv[1]
 
 if not os.path.exists(config_file):
     print(f'ERROR: file <{config_file}> not found')
@@ -55,7 +54,7 @@ for i, job in enumerate(config['jobs']):
     print(f"\t{job['input']}")
     with open(job['input'], 'r') as f:
         markdown_text = f.readlines()
-    project.parse_md_file_contents(markdown_text, md_file_path=job['input'], tex_file_path=job['output'])
+    project.parse_md_file_contents(markdown_text, md_file_path=job['input'], tex_file_path=job['output'], fig_path=config['settings']['latex_local_images_dir'])
 
 print('TRANSLATING...')
 translated_file_contents = {}
