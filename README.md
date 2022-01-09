@@ -1,13 +1,13 @@
-# Obsidian to LaTex
+# Obsidian to LaTeX
 
-A tool to create academic reports straight from [Obsidian notes](https://obsidian.md). The parser translates from Obsidian markdown to LaTex and it only requires some structure in the way you write your notes/essays.
+A tool to create academic reports straight from [Obsidian notes](https://obsidian.md). The parser translates from Obsidian markdown to LaTeX and it only requires some structure in the way you write your notes/essays.
 
 ## Using the parser
 Requirements:
 
 - Python 3
 
-Your LaTex project must load the following in the preamble:
+Your LaTeX project must load the following in the preamble:
 ```
 \usepackage{csquotes}           % Block quotes
 \usepackage{hyperref}           % \autoref{}
@@ -16,13 +16,13 @@ Your LaTex project must load the following in the preamble:
 \usepackage{color,soul}         % For highlighting
 ```
 
-Every Obsidian note corresponds to a LaTex chapter 
+Every Obsidian note corresponds to a LaTeX chapter 
 
 If you prefer an example, checkout the `example/` directory.
  
 **The project settings file**
 
-A `.json` file that contains a specification the translation jobs from markdown to LaTex and other settings. The file has the following structure:
+A `.json` file that contains a specification the translation jobs from markdown to LaTeX and other settings. The file has the following structure:
 ```
 {
     "jobs" : [
@@ -40,10 +40,10 @@ A `.json` file that contains a specification the translation jobs from markdown 
     }
 }
 ```
-The `jobs` are the pairs of markdown -> Latex files. The parser reads all the input files first and scans them for headers. Then it translates them to LaTex and saves them into the output files. The input files are accessed with read-only and therefore they are safe from modification. The content of the output files is instead erased and replaced with the translation.
+The `jobs` are the pairs of markdown -> LateX files. The parser reads all the input files first and scans them for headers. Then it translates them to LaTeX and saves them into the output files. The input files are accessed with read-only and therefore they are safe from modification. The content of the output files is instead erased and replaced with the translation.
 
 The settings:
-- `latex_local_images_dir`: The sub-directory of the figures within the LaTex project. That is, relative to the root folder where the LaTex compiler is run.
+- `latex_local_images_dir`: The sub-directory of the figures within the LaTeX project. That is, relative to the root folder where the LaTeX compiler is run.
 
 Currently there are no more settings.
 
@@ -66,25 +66,28 @@ Use as you normally would in markdown.
 
 **Headers**
 
-First, second and third-level headers work as usual and translate to chapter, section and subsection in LaTex. Fourth-level headers have been repurposed to block comments (see next). Deeper levels are currently not handled and will parse as normal text.
+First, second and third-level headers work as usual and translate to section, subsection and subsubsection in LaTeX. Fourth-level headers have been repurposed to block comments (see next). Deeper levels are currently not handled and will parse as normal text.
 
 **Block comments**
 
-Four-level headers (`#### `) are interpreted as comments and macros for the parser. They are not translated to LaTex. The Obsidian theme that comes with this repository makes them small and faded, and in preview mode they are hidden unless hovered over with the mouse. You can use them to indicate the topic of a paragraph, for instance.
+Four-level headers (`#### `) are interpreted as comments and macros for the parser. They are not translated to LaTeX. The Obsidian theme that comes with this repository makes them small and faded, and in preview mode they are hidden unless hovered over with the mouse. You can use them to indicate the topic of a paragraph, for instance.
+
+**Comments**
+The block between two separator lines (`---`) is ignored by the LaTeX interpreter. 
 
 **Citations**
 
 Citations must have the format `` `jordan1973` `` or `[[jordan1973]]`. It is important that they contain a year between 1800 and 2000+, and that there are no other characters other than letters or numbers. For instance, `` `john-ann1993` `` might not parse correctly.
 
-If multiple citations are needed, separate them with comma and/or space. That is, `` `jordan1973`, [[marione1998]], [[james2017]]`` will produce the LaTex code `\cite{jordan1973, marione1998, james2017}`.
+If multiple citations are needed, separate them with comma and/or space. That is, `` `jordan1973`, [[marione1998]], [[james2017]]`` will produce the LaTeX code `\cite{jordan1973, marione1998, james2017}`.
 
 **References in document**
 
-Refer to figures and equations with the notation `` `fig:aircraft_wing` `` and `` `eq:aircraft_lift` ``. These will be translated to `\autoref{fig:aircraft_wing}` and `\autoref{eq:aircraft_lift}` in LaTex.
+Refer to figures and equations with the notation `` `fig:aircraft_wing` `` and `` `eq:aircraft_lift` ``. These will be translated to `\autoref{fig:aircraft_wing}` and `\autoref{eq:aircraft_lift}` in LaTeX.
 
 **References to sections and other documents**
 
-You can use the Obsidian notation `[[doc_name#header title]]` or `[[#header title]]`. If the document is within the list of translation jobs it will be referenced. The parser creates a label in LaTex for every header, so a reference becomes `\autoref{sec:header_title__doc_name}`. If a reference is not found (e.g. it points to a file not included in the list of translation jobs), it will be highlighted instead (i.e. replaced in LaTex with `\hl{doc_name#header title}`) so you can easily see it and make corrections.
+You can use the Obsidian notation `[[doc_name#header title]]` or `[[#header title]]`. If the document is within the list of translation jobs it will be referenced. The parser creates a label in LaTeX for every header, so a reference becomes `\autoref{sec:header_title__doc_name}`. If a reference is not found (e.g. it points to a file not included in the list of translation jobs), it will be highlighted instead (i.e. replaced in LaTeX with `\hl{doc_name#header title}`) so you can easily see it and make corrections.
 
 **Equations**
 
@@ -118,11 +121,11 @@ The above discussion leads to \autoref{eq:inverse_relation}:
 y = \frac{1}{x}
 \end{equation}
 ```
-If an equation is referenced in text but the label is not defined it will be notified in the terminal output. It will also be detected by the latex compiler later, of course.
+If an equation is referenced in text but the label is not defined it will be notified in the terminal output. It will also be detected by the LaTeX compiler later, of course.
 
 **Figures**
 
-Figures require a command that tells the parser which file to use in the latex project and optionally the width of the figure (otherwise, the default is `0.5\linewidth`). The notation is the following in markdown:
+Figures require a command that tells the parser which file to use in the LaTeX project and optionally the width of the figure (otherwise, the default is `0.5\linewidth`). The notation is the following in markdown:
 ```
 #### Latex figure: graph_of_inverse.png w=0.7
 `fig:inverse_plot`: Here you write the caption
@@ -137,30 +140,16 @@ which is translated to
 	\label{fig:inverse_plot}
 \end{figure}
 ```
-It is important that the command and the caption follow the syntax above, otherwise the parser will not detect them. Notice that the images in obsidian are ignored by the parser. The parameter `imgs_dir/` is the directory of the images within you latex project and must be specified in the config file alongside the translation jobs.
+It is important that the command and the caption follow the syntax above, otherwise the parser will not detect them. Notice that the images in obsidian are ignored by the parser. The parameter `imgs_dir/` is the directory of the images within you LaTeX project and must be specified in the config file alongside the translation jobs.
 
 **Tables**
 
-Tables are currently not parsed. If detected by the parser, they will be commented in latex.
+Tables are currently not parsed. If detected by the parser, they will be commented in LaTeX.
 
 **Footnotes**
 
-You can use footnotes as you would normally in Obsidian and they will be parsed to `\footnote{}` commands in LaTex.
+You can use footnotes as you would normally in Obsidian and they will be parsed to `\footnote{}` commands in LaTeX.
 
 **Block quotes**
 
-Block quotes in obsidian translate to text within `\begin{displayquote}` and `\end{displayquote}` in LaTex (make sure the package is loaded).
-
-**Scratch pad section**
-
-Between the header and the text, there must be a line separator `---`. Anything before the line separator will be skipped. For instance:
-```
-# Title of the essay
-
-some comments/notes/etc
-This text will not be parsed to LaTex
-
----
-The text below the horizontal line is parsed to LaTex 
-```
-Line separators are always ignored, but the first one is important to separate the scratch text from the translated text.
+Block quotes in obsidian translate to text within `\begin{displayquote}` and `\end{displayquote}` in LaTeX (make sure the package is loaded).
