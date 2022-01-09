@@ -25,9 +25,6 @@ SOFTWARE.
 import re
 import copy
 
-IGNORE_START_COMMAND = 'latex ignore start'
-IGNORE_END_COMMAND = 'latex ignore end'
-FIGURE_COMMAND = 'latex figure:'
 EQUATION_COMMAND = 'eq:'
 LATEX_SPECIAL_CHARS = r'$%_}&#{'
 
@@ -56,11 +53,13 @@ def detect_command(line):
     else:
         return False
 
-
-def detect_figure_command(line):
-    if command := detect_command(line):
-        if command.strip().lower()[:len(FIGURE_COMMAND)] == FIGURE_COMMAND:
-            return command[len(FIGURE_COMMAND):].strip().split(' ')
+def detect_figure(line):
+    match = re.match(r'^!\[\[(.+\.png|.+\.jpg)\]\](.*)$', line.strip())
+    is_figure = bool(match)
+    if is_figure:
+        name = match.group(1)
+        settings = [] if match.group(2)=='' else match.group(2).split(' ')
+        return [name] + settings
     else:
         return False
 
@@ -74,8 +73,8 @@ def detect_equation_command(line):
 
 
 def is_comment(line):
-    return detect_command(line) and not detect_figure_command(line) and not is_command(line, IGNORE_START_COMMAND) and not is_command(line, IGNORE_END_COMMAND) and not detect_equation_command(line)
-
+    return detect_command(line) and not detect_equation_command(line)
+    # and not detect_figure_command(line)
 
 def is_command(line, command):
     if cmd := detect_command(line):
@@ -99,13 +98,8 @@ def is_list_item(line):
 def is_quote(line):
     return False if len(line.strip()) == 0 else line.strip()[0] == '>'
 
-
-def is_markdown_image(line):
-    return bool(re.match('^!\[\[.+?\.(png|jpg).*?]]$', line.strip()))
-
-
 def is_ignore_line(line):
-    return len(line.strip()) == 0 or is_comment(line) or is_markdown_image(line)
+    return len(line.strip()) == 0 or is_comment(line)
 
 
 def is_separator_line(line):
@@ -141,17 +135,8 @@ def to_blocks(text_lines, fig_path, parent=None):
     i = 0
     while i < len(text_lines):
         block = None
-        # PROCESS IGNORE BLOCK COMMAND
-        if is_command(text_lines[i], IGNORE_START_COMMAND):
-            is_ignoring = True
-            i += 1
-        elif is_command(text_lines[i], IGNORE_END_COMMAND):
-            if not is_ignoring:
-                print(f'\t\tWARNING: found command <{IGNORE_END_COMMAND}> without a matching <{IGNORE_START_COMMAND}>')
-            is_ignoring = False
-            i += 1
         # PROCESS EMPTY LINES, HORIZONTAL LINES, COMMENTS
-        elif is_ignore_line(text_lines[i]):
+        if is_ignore_line(text_lines[i]):
             i += 1
         elif is_separator_line(text_lines[i]):
             is_ignoring = not is_ignoring
@@ -186,7 +171,7 @@ def to_blocks(text_lines, fig_path, parent=None):
             block = Quote(content=[line.lstrip('> ') for line in text_lines[i: end_quote_i]])
             i = end_quote_i
         # PROCESS FIGURE BLOCK
-        elif settings := detect_figure_command(text_lines[i]):
+        elif settings := detect_figure(text_lines[i]):
             alt_data = re.match(r'^`(.*?)`:(.*)', text_lines[i+1])
             assert alt_data, f'Caption of figure <{settings[0]}> badly formed'
             label = alt_data.group(1).strip()
@@ -209,7 +194,7 @@ def to_blocks(text_lines, fig_path, parent=None):
                 content_blocks.append(block)
 
     if is_ignoring:
-        print(f'\t\tWARNING: did not find a matching <{IGNORE_END_COMMAND}> command')
+        print(f'\t\tWARNING: did not find a matching separator')
     return content_blocks
 
 

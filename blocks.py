@@ -197,7 +197,7 @@ class Figure(Block):
             for setting in self.settings[1:]:
                 if setting[:2] == 'w=':
                     return setting[2:]
-        return 0.5
+        return 1
 
     def formatted_text(self):
         text_lines = ['\\begin{figure}[H]\n']
