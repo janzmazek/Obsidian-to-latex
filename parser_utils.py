@@ -25,7 +25,6 @@ SOFTWARE.
 import re
 import copy
 
-EQUATION_COMMAND = 'eq:'
 LATEX_SPECIAL_CHARS = r'$%_}&#{'
 
 
@@ -64,17 +63,18 @@ def detect_figure(line):
         return False
 
 
-def detect_equation_command(line):
-    if command := detect_command(line):
-        if command.strip().lower()[:len(EQUATION_COMMAND)] == EQUATION_COMMAND:
-            return command.strip()
+def detect_labeled_equation(line):
+    match = re.match(r'`eq_label:(\S.*)`', line.strip())
+    is_labeled_equation = bool(match)
+    if is_labeled_equation:
+        return "eq:"+match.group(1).strip()
     else:
         return False
 
 
 def is_comment(line):
-    return detect_command(line) and not detect_equation_command(line)
-    # and not detect_figure_command(line)
+    return detect_command(line)
+
 
 def is_command(line, command):
     if cmd := detect_command(line):
@@ -84,7 +84,7 @@ def is_command(line, command):
 
 
 def is_end_paragraph(line):
-    return is_ignore_line(line) or is_separator_line(line) or is_equation_dollars(line) or is_list_item(line) or is_quote(line) or detect_command(line) or detect_header(line)
+    return is_ignore_line(line) or is_separator_line(line) or is_equation_dollars(line) or is_list_item(line) or is_quote(line) or detect_command(line) or detect_labeled_equation(line) or detect_header(line)
 
 
 def is_equation_dollars(line):
@@ -154,7 +154,7 @@ def to_blocks(text_lines, fig_path, parent=None):
             block = Equation(content=text_lines[i + 1: end_equation_i])
             i = end_equation_i + 1  # line with $$ must be skipped # PROCESS EQUATION BLOCK (unlabeled)
         # PROCESS EQUATION BLOCK (labeled)
-        elif label := detect_equation_command(text_lines[i]):
+        elif label := detect_labeled_equation(text_lines[i]):
             assert is_equation_dollars(text_lines[i + 1]), 'Equation dollars must be alone in a line'
             i += 1  # skip next line because it just contains the double dollar
             end_equation_i = find_next_index(text_lines, lambda l: is_equation_dollars(l), i + 1)
@@ -234,9 +234,9 @@ def format_text(text_lines_origin):
         # Replace Markdown note key citations by Latex citations, handles consecutive citations too
         text_lines[i] = re.sub(r'\[\[(\w+[18|19|20]\d{2}\S*?)\]\]', r'\\cite{\1}', text_lines[i])
         # Replace Markdown figure references by Latex references
-        text_lines[i] = re.sub(r'`(fig:\S*?)`', r'\\autoref{\1}', text_lines[i])
+        text_lines[i] = re.sub(r'`(fig:\S*?)`', r'\\ref{\1}', text_lines[i])
         # Replace Markdown equation references by Latex references
-        text_lines[i] = re.sub(r'`(eq:\S*?)`', r'\\autoref{\1}', text_lines[i])
+        text_lines[i] = re.sub(r'`(eq:\S*?)`', r'\\ref{\1}', text_lines[i])
 
         # ===== TEXT FORMATTING =====
         # Replace Markdown monospace by latex monospace (note: do after other code blocks like refs and citations)
